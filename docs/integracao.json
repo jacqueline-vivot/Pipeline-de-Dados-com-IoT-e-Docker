@@ -1,0 +1,7 @@
+{
+  "banco": "PostgreSQL",
+  "total": 97605,
+  "reexecucao_sem_duplicacao": true,
+  "soma_views_confere": true,
+  "minimos_maximos_consistentes": true
+}

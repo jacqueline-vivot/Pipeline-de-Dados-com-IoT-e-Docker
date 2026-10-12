@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-iot}
+      POSTGRES_USER: ${POSTGRES_USER:-iot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Crie o arquivo .env a partir de .env.example}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  pipeline:
+    build: .
+    command: ["python", "-m", "src.pipeline", "--csv", "data/IOT-temp.csv"]
+    environment: &database
+      DB_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-iot}
+      POSTGRES_USER: ${POSTGRES_USER:-iot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data:/app/data
+      - ./docs:/app/docs
+    depends_on:
+      db:
+        condition: service_healthy
+  dashboard:
+    build: .
+    ports:
+      - "127.0.0.1:8501:8501"
+    environment: *database
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+volumes:
+  postgres_data:
